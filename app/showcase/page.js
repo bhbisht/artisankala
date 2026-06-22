@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import ThemeToggle from "../../components/ThemeToggle";
 
 import {
   Button,
@@ -16,10 +17,12 @@ export default function ShowcasePage() {
   const [showToast, setShowToast] = useState(false);
 
   return (
-    <div className="p-8 space-y-8">
+    <div className="p-8 space-y-8 min-h-screen">
       <h1 className="text-4xl font-bold">
         UI Component Showcase
       </h1>
+
+      <ThemeToggle />
 
       {/* Buttons */}
       <section className="space-y-4">
@@ -81,9 +84,7 @@ export default function ShowcasePage() {
 
         <Modal
           isOpen={isModalOpen}
-          onClose={() =>
-            setIsModalOpen(false)
-          }
+          onClose={() => setIsModalOpen(false)}
           title="Sample Modal"
         >
           <p>
