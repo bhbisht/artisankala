@@ -1,0 +1,5 @@
+workspace:
+  id: d4f9c87a-ad62-418d-8cf2-35b0bb7023ac
+cloudResources:
+  collections:
+    ../postman/collections/ArtisanKala API: 56231068-03111de6-5eec-48f5-8a56-c1ffcd3675f9

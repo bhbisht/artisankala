@@ -1,0 +1,14 @@
+$kind: http-request
+name: http://localhost:5000/api/products/1
+url: http://localhost:5000/api/products/1
+method: PUT
+body:
+  type: json
+  content: "{\r
+
+    \  \"name\": \"Updated Pot\",\r
+
+    \  \"price\": 650\r
+
+    }"
+order: 3976987961083646

@@ -1,0 +1,14 @@
+$kind: http-request
+name: http://localhost:5000/api/products/1
+url: http://localhost:5000/api/products
+method: POST
+body:
+  type: json
+  content: "{\r
+
+    \  \"name\": \"Clay Vase\",\r
+
+    \  \"price\": 900\r
+
+    }"
+order: 3747453967809653
