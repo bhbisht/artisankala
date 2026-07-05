@@ -1,103 +1,126 @@
 const express = require("express");
+const prisma = require("../prismaClient");
 
 const router = express.Router();
 
-let products = [
-  {
-    id: 1,
-    name: "Handmade Pot",
-    price: 500,
-  },
-  {
-    id: 2,
-    name: "Wooden Basket",
-    price: 700,
-  },
-];
-
 // GET ALL PRODUCTS
-router.get("/", (req, res) => {
-  res.status(200).json(products);
+router.get("/", async (req, res, next) => {
+  try {
+    const products = await prisma.product.findMany();
+
+    res.status(200).json(products);
+  } catch (err) {
+    next(err);
+  }
 });
 
 // SEARCH PRODUCTS
-router.get("/search/:name", (req, res) => {
-  const result = products.filter((p) =>
-    p.name.toLowerCase().includes(req.params.name.toLowerCase())
-  );
+router.get("/search/:name", async (req, res, next) => {
+  try {
+    const products = await prisma.product.findMany({
+      where: {
+        name: {
+          contains: req.params.name,
+          mode: "insensitive",
+        },
+      },
+    });
 
-  res.status(200).json(result);
+    res.status(200).json(products);
+  } catch (err) {
+    next(err);
+  }
 });
 
 // GET SINGLE PRODUCT
-router.get("/:id", (req, res) => {
-  const product = products.find(
-    (p) => p.id === parseInt(req.params.id)
-  );
-
-  if (!product) {
-    return res.status(404).json({
-      message: "Product not found",
+router.get("/:id", async (req, res, next) => {
+  try {
+    const product = await prisma.product.findUnique({
+      where: {
+        id: Number(req.params.id),
+      },
     });
-  }
 
-  res.status(200).json(product);
+    if (!product) {
+      return res.status(404).json({
+        message: "Product not found",
+      });
+    }
+
+    res.status(200).json(product);
+  } catch (err) {
+    next(err);
+  }
 });
 
 // CREATE PRODUCT
-router.post("/", (req, res) => {
-  const { name, price } = req.body;
+router.post("/", async (req, res, next) => {
+  try {
+    const { name, description, price, image, category } = req.body;
 
-  if (!name || !price) {
-    return res.status(400).json({
-      message: "Name and price are required",
+    if (!name || !description || !price || !image || !category) {
+      return res.status(400).json({
+        message: "All fields are required",
+      });
+    }
+
+    const product = await prisma.product.create({
+      data: {
+        name,
+        description,
+        price: Number(price),
+        image,
+        category,
+      },
     });
+
+    res.status(201).json(product);
+  } catch (err) {
+    next(err);
   }
-
-  const product = {
-    id: products.length + 1,
-    name,
-    price,
-  };
-
-  products.push(product);
-
-  res.status(201).json(product);
 });
 
 // UPDATE PRODUCT
-router.put("/:id", (req, res) => {
-  const product = products.find(
-    (p) => p.id === parseInt(req.params.id)
-  );
-
-  if (!product) {
-    return res.status(404).json({
-      message: "Product not found",
+router.put("/:id", async (req, res, next) => {
+  try {
+    const product = await prisma.product.update({
+      where: {
+        id: Number(req.params.id),
+      },
+      data: req.body,
     });
+
+    res.status(200).json(product);
+  } catch (err) {
+    if (err.code === "P2025") {
+      return res.status(404).json({
+        message: "Product not found",
+      });
+    }
+
+    next(err);
   }
-
-  product.name = req.body.name || product.name;
-  product.price = req.body.price || product.price;
-
-  res.status(200).json(product);
 });
 
 // DELETE PRODUCT
-router.delete("/:id", (req, res) => {
-  const index = products.findIndex(
-    (p) => p.id === parseInt(req.params.id)
-  );
-
-  if (index === -1) {
-    return res.status(404).json({
-      message: "Product not found",
+router.delete("/:id", async (req, res, next) => {
+  try {
+    await prisma.product.delete({
+      where: {
+        id: Number(req.params.id),
+      },
     });
+
+    res.status(204).send();
+  } catch (err) {
+    if (err.code === "P2025") {
+      return res.status(404).json({
+        message: "Product not found",
+      });
+    }
+
+    next(err);
   }
-
-  products.splice(index, 1);
-
-  res.status(204).send();
 });
 
 module.exports = router;

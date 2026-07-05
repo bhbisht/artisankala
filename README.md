@@ -1,36 +1,203 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# 🎨 ArtisanKala
 
-## Getting Started
+ArtisanKala is a full-stack web application built to showcase and manage handmade artisan products. It allows users to perform complete CRUD (Create, Read, Update, Delete) operations on products through a REST API connected to a PostgreSQL database.
 
-First, run the development server:
+---
+
+## 🚀 Tech Stack
+
+### Frontend
+- Next.js
+- React
+- CSS
+
+### Backend
+- Node.js
+- Express.js
+
+### Database
+- PostgreSQL (Supabase)
+
+### ORM
+- Prisma
+
+---
+
+# 📂 Project Structure
+
+```
+artisankala/
+│
+├── app/                 # Next.js frontend
+├── components/          # React components
+├── public/
+│
+├── backend/
+│   ├── prisma/
+│   │   ├── schema.prisma
+│   │   └── prismaClient.js
+│   ├── routes/
+│   │   └── products.js
+│   ├── server.js
+│   ├── .env.example
+│   └── package.json
+│
+└── README.md
+```
+
+---
+
+# 🗄️ Database
+
+This project uses **PostgreSQL** hosted on **Supabase** with **Prisma ORM**.
+
+### Why PostgreSQL?
+
+- Reliable relational database
+- Supports structured data
+- Works seamlessly with Prisma
+- Easy cloud hosting using Supabase
+
+---
+
+# 🗃️ Database Schema
+
+Insert your schema diagram here.
+
+Example:
+
+```
+Product
+-------------------------
+id          Int
+name        String
+description String
+price       Float
+image       String
+category    String
+createdAt   DateTime
+```
+
+After creating your diagram, replace this section with:
+
+```md
+![Schema Diagram](W5_SchemaDiagram_YourInternID.png)
+```
+
+---
+
+# ⚙️ Setup
+
+## Clone Repository
+
+```bash
+git clone <repository-url>
+```
+
+---
+
+## Install Frontend
+
+```bash
+npm install
+```
+
+Run frontend
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Frontend runs on
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+```
+http://localhost:3000
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## Install Backend
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+cd backend
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+npm install
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## Environment Variables
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Create a `.env` file inside the backend folder.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Example:
+
+```env
+DATABASE_URL="your_database_url"
+
+DIRECT_URL="your_direct_database_url"
+```
+
+---
+
+## Generate Prisma Client
+
+```bash
+npx prisma generate
+```
+
+---
+
+## Run Database Migration
+
+```bash
+npx prisma migrate dev
+```
+
+---
+
+## Start Backend
+
+```bash
+node server.js
+```
+
+Backend runs on
+
+```
+http://localhost:5000
+```
+
+---
+
+# 📡 API Endpoints
+
+| Method | Endpoint | Description |
+|---------|----------|-------------|
+| GET | /api/products | Get all products |
+| GET | /api/products/:id | Get product by ID |
+| GET | /api/products/search/:name | Search products |
+| POST | /api/products | Create product |
+| PUT | /api/products/:id | Update product |
+| DELETE | /api/products/:id | Delete product |
+
+---
+
+# 📷 CRUD Operations
+
+The application supports:
+
+- ✅ Create Product
+- ✅ Read Products
+- ✅ Update Product
+- ✅ Delete Product
+
+---
+
+# 👩‍💻 Author
+
+**Bhawna Bisht**
+
+BCA (AI & DS)
+
+Graphic Era University
