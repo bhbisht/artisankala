@@ -1,9 +1,10 @@
 const express = require("express");
 const prisma = require("../prismaClient");
+const verifyToken = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
-// GET ALL PRODUCTS
+// GET ALL PRODUCTS (Public)
 router.get("/", async (req, res, next) => {
   try {
     const products = await prisma.product.findMany();
@@ -14,7 +15,7 @@ router.get("/", async (req, res, next) => {
   }
 });
 
-// SEARCH PRODUCTS
+// SEARCH PRODUCTS (Public)
 router.get("/search/:name", async (req, res, next) => {
   try {
     const products = await prisma.product.findMany({
@@ -32,7 +33,7 @@ router.get("/search/:name", async (req, res, next) => {
   }
 });
 
-// GET SINGLE PRODUCT
+// GET SINGLE PRODUCT (Public)
 router.get("/:id", async (req, res, next) => {
   try {
     const product = await prisma.product.findUnique({
@@ -53,8 +54,8 @@ router.get("/:id", async (req, res, next) => {
   }
 });
 
-// CREATE PRODUCT
-router.post("/", async (req, res, next) => {
+// CREATE PRODUCT (Protected)
+router.post("/", verifyToken, async (req, res, next) => {
   try {
     const { name, description, price, image, category } = req.body;
 
@@ -80,8 +81,8 @@ router.post("/", async (req, res, next) => {
   }
 });
 
-// UPDATE PRODUCT
-router.put("/:id", async (req, res, next) => {
+// UPDATE PRODUCT (Protected)
+router.put("/:id", verifyToken, async (req, res, next) => {
   try {
     const product = await prisma.product.update({
       where: {
@@ -102,8 +103,8 @@ router.put("/:id", async (req, res, next) => {
   }
 });
 
-// DELETE PRODUCT
-router.delete("/:id", async (req, res, next) => {
+// DELETE PRODUCT (Protected)
+router.delete("/:id", verifyToken, async (req, res, next) => {
   try {
     await prisma.product.delete({
       where: {
