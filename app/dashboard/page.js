@@ -1,84 +1,102 @@
 "use client";
 
-import { signOut, useSession } from "next-auth/react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Loader, Toast } from "@/components/ui";
+import { getToken, getUser, authFetch } from "@/lib/api";
 
 export default function Dashboard() {
-  const { data: session } = useSession();
+  const router = useRouter();
+  const [user, setUser] = useState(null);
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [toast, setToast] = useState({ show: false, message: "", type: "error" });
+
+  useEffect(() => {
+    if (!getToken()) {
+      router.push("/login");
+      return;
+    }
+
+    setUser(getUser());
+
+    authFetch("/api/products/mine")
+      .then((data) => setProducts(data))
+      .catch((err) => {
+        if (err.status === 401) {
+          router.push("/login");
+          return;
+        }
+        setToast({ show: true, message: err.message, type: "error" });
+      })
+      .finally(() => setLoading(false));
+  }, [router]);
+
+  if (loading) {
+    return (
+      <div className="p-8">
+        <Loader />
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-8">
-      <div className="max-w-6xl mx-auto">
+    <div className="p-4 sm:p-8">
+      <h1 className="text-3xl sm:text-4xl font-bold">Dashboard</h1>
 
-        {/* Header */}
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-4xl font-bold text-gray-800">
-              🛍️ ArtisanKala Dashboard
-            </h1>
-            <p className="text-gray-600 mt-2">
-              Welcome {session?.user?.name || "User"} 👋
-            </p>
-          </div>
+      {user && (
+        <p className="mt-2 text-gray-600">
+          Welcome back, <strong>{user.name || user.email}</strong>
+        </p>
+      )}
 
-          <button
-            onClick={() => signOut()}
-            className="bg-red-500 hover:bg-red-600 text-white px-5 py-2 rounded-lg"
-          >
-            Logout
-          </button>
+      <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="border rounded-lg p-6">
+          <p className="text-sm text-gray-500">Your products</p>
+          <p className="text-3xl font-bold mt-1">{products.length}</p>
         </div>
 
-        {/* User Card */}
-        <div className="bg-white rounded-xl shadow-md p-6 mb-8">
-          <h2 className="text-2xl font-semibold mb-4">
-            User Information
-          </h2>
-
-          <div className="space-y-2">
-            <p>
-              <strong>Name:</strong> {session?.user?.name}
-            </p>
-
-            <p>
-              <strong>Email:</strong> {session?.user?.email}
-            </p>
-
-            {session?.user?.image && (
-              <img
-                src={session.user.image}
-                alt="Profile"
-                className="w-24 h-24 rounded-full border mt-3"
-              />
-            )}
-          </div>
-        </div>
-
-        {/* Dashboard Cards */}
-        <div className="grid md:grid-cols-3 gap-6">
-
-          <div className="bg-white rounded-xl shadow p-6">
-            <h2 className="text-xl font-bold">🎨 Products</h2>
-            <p className="text-gray-600 mt-2">
-              Manage artisan handmade products.
-            </p>
-          </div>
-
-          <div className="bg-white rounded-xl shadow p-6">
-            <h2 className="text-xl font-bold">📦 Orders</h2>
-            <p className="text-gray-600 mt-2">
-              View customer orders.
-            </p>
-          </div>
-
-          <div className="bg-white rounded-xl shadow p-6">
-            <h2 className="text-xl font-bold">📊 Analytics</h2>
-            <p className="text-gray-600 mt-2">
-              Sales and performance overview.
-            </p>
-          </div>
-
-        </div>
+        <a
+          href="/products/manage"
+          className="border rounded-lg p-6 flex flex-col justify-center hover:bg-gray-50"
+        >
+          <p className="font-semibold">Manage products</p>
+          <p className="text-sm text-gray-500 mt-1">Add, edit, or remove your listings</p>
+        </a>
       </div>
+
+      <h2 className="text-xl font-semibold mt-10 mb-4">Your recent products</h2>
+
+      {products.length === 0 ? (
+        <div className="border rounded-lg p-8 text-center text-gray-500">
+          No products yet — add your first one to get started.
+          <div className="mt-4">
+            <a
+              href="/products/manage"
+              className="bg-blue-600 text-white px-4 py-2 rounded inline-block"
+            >
+              Add a product
+            </a>
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {products.slice(0, 6).map((product) => (
+            <div key={product.id} className="border rounded-lg p-4">
+              <h3 className="font-bold">{product.name}</h3>
+              <p className="text-sm text-gray-500">{product.category}</p>
+              <p className="mt-1">₹{product.price}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <Toast
+        show={toast.show}
+        message={toast.message}
+        type={toast.type}
+        onClose={() => setToast({ ...toast, show: false })}
+      />
     </div>
   );
 }
