@@ -16,11 +16,17 @@ model Product {
   image       String
   category    String
   createdAt   DateTime @default(now())
+  userId      Int?
+  owner       User?    @relation(fields: [userId], references: [id])
 }
 
+
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  password  String
-  createdAt DateTime @default(now())
+  id        Int       @id @default(autoincrement())
+  name      String?
+  email     String    @unique
+  password  String?
+  provider  String    @default("credentials")
+  createdAt DateTime  @default(now())
+  products  Product[]
 }
