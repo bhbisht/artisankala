@@ -1,62 +1,51 @@
 const express = require("express");
 const cors = require("cors");
-const rateLimit = require("express-rate-limit");
 require("dotenv").config();
+
+const authLimiter = require("./middleware/rateLimiter");
+const productRoutes = require("./routes/products");
+const authRoutes = require("./routes/auth");
+const aiRoutes = require("./routes/ai");
 
 const app = express();
 
-// Middleware
-app.use(cors());
+const allowedOrigins = [
+  "http://localhost:3000",
+  process.env.FRONTEND_URL,
+].filter(Boolean);
+
+app.use(cors({ origin: allowedOrigins }));
 app.use(express.json());
 
-// Rate Limiter for Authentication Routes
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // Allow only 5 requests
-  message: {
-    success: false,
-    message:
-      "Too many authentication attempts. Please try again after 15 minutes.",
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-
-// Home Route
 app.get("/", (req, res) => {
   res.json({
     success: true,
-    message: "🎉 ArtisanKala Backend API is Running!",
+    message: "ArtisanKala Backend API is running",
     endpoints: {
       allProducts: "/api/products",
       singleProduct: "/api/products/:id",
       search: "/api/products/search/:name",
       register: "/api/auth/register",
       login: "/api/auth/login",
+      aiDescription: "/api/ai/generate-description",
     },
   });
 });
 
-// Routes
-const productRoutes = require("./routes/products");
-const authRoutes = require("./routes/auth");
-
 app.use("/api/products", productRoutes);
-
-// Apply rate limiting ONLY to authentication routes
 app.use("/api/auth", authLimiter, authRoutes);
+app.use("/api/ai", aiRoutes);
 
-// Error Handling Middleware
+// Central error handler
 app.use((err, req, res, next) => {
   console.error(err);
-
   res.status(500).json({
     success: false,
     message: err.message || "Internal Server Error",
   });
 });
 
-// 404 Route
+// 404 handler
 app.use((req, res) => {
   res.status(404).json({
     success: false,
@@ -64,9 +53,8 @@ app.use((req, res) => {
   });
 });
 
-// Start Server
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-  console.log(`🚀 Server running at http://localhost:${PORT}`);
+  console.log(`Server running at http://localhost:${PORT}`);
 });
