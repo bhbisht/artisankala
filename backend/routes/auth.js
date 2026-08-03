@@ -3,16 +3,18 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { body, validationResult } = require("express-validator");
 const prisma = require("../prismaClient");
+const authLimiter = require("../middleware/rateLimiter");
 
 const router = express.Router();
-
 
 // =========================
 // REGISTER USER
 // =========================
 router.post(
   "/register",
+  authLimiter,
   [
+    body("name").notEmpty().withMessage("Name is required"),
     body("email").isEmail().withMessage("Enter a valid email"),
     body("password")
       .isLength({ min: 6 })
@@ -24,11 +26,12 @@ router.post(
 
       if (!errors.isEmpty()) {
         return res.status(400).json({
+          success: false,
           errors: errors.array(),
         });
       }
 
-      const { email, password } = req.body;
+      const { name, email, password } = req.body;
 
       // Check if email already exists
       const existingUser = await prisma.user.findUnique({
@@ -37,6 +40,7 @@ router.post(
 
       if (existingUser) {
         return res.status(400).json({
+          success: false,
           message: "Email already registered",
         });
       }
@@ -47,16 +51,21 @@ router.post(
       // Save user
       const user = await prisma.user.create({
         data: {
+          name,
           email,
           password: hashedPassword,
+          provider: "credentials",
         },
       });
 
       res.status(201).json({
+        success: true,
         message: "User registered successfully",
         user: {
           id: user.id,
+          name: user.name,
           email: user.email,
+          provider: user.provider,
         },
       });
     } catch (err) {
@@ -65,12 +74,12 @@ router.post(
   }
 );
 
-
 // =========================
 // LOGIN USER
 // =========================
 router.post(
   "/login",
+  authLimiter,
   [
     body("email").isEmail().withMessage("Enter a valid email"),
     body("password").notEmpty().withMessage("Password is required"),
@@ -81,6 +90,7 @@ router.post(
 
       if (!errors.isEmpty()) {
         return res.status(400).json({
+          success: false,
           errors: errors.array(),
         });
       }
@@ -94,7 +104,16 @@ router.post(
 
       if (!user) {
         return res.status(401).json({
+          success: false,
           message: "Invalid email or password",
+        });
+      }
+
+      // Google OAuth user
+      if (!user.password) {
+        return res.status(400).json({
+          success: false,
+          message: "Please login using Google.",
         });
       }
 
@@ -106,11 +125,12 @@ router.post(
 
       if (!isPasswordCorrect) {
         return res.status(401).json({
+          success: false,
           message: "Invalid email or password",
         });
       }
 
-      // Generate JWT Token
+      // Generate JWT
       const token = jwt.sign(
         {
           id: user.id,
@@ -123,8 +143,15 @@ router.post(
       );
 
       res.status(200).json({
+        success: true,
         message: "Login successful",
         token,
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          provider: user.provider,
+        },
       });
     } catch (err) {
       next(err);

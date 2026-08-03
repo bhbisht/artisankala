@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Loader, Toast } from "@/components/ui";
+import { getToken, authFetch } from "@/lib/api";
 
 const initialForm = {
   name: "",
@@ -11,6 +13,7 @@ const initialForm = {
 };
 
 export default function AIPage() {
+  const router = useRouter();
   const [form, setForm] = useState(initialForm);
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
@@ -30,6 +33,13 @@ export default function AIPage() {
       return;
     }
 
+    const token = getToken();
+    if (!token) {
+      showToast("Please log in to use this feature.");
+      setTimeout(() => router.push("/login"), 1200);
+      return;
+    }
+
     setLoading(true);
     setDescription("");
 
@@ -37,28 +47,19 @@ export default function AIPage() {
     const timeout = setTimeout(() => controller.abort(), 20000);
 
     try {
-      const token = localStorage.getItem("token");
-
-      const res = await fetch("http://localhost:5000/api/ai/generate-description", {
+      const data = await authFetch("/api/ai/generate-description", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
         body: JSON.stringify(form),
         signal: controller.signal,
       });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.message || "Failed to generate description.");
-      }
 
       setDescription(data.description);
     } catch (err) {
       if (err.name === "AbortError") {
         showToast("Request timed out. Please try again.");
+      } else if (err.status === 401) {
+        showToast("Your session has expired. Please log in again.");
+        setTimeout(() => router.push("/login"), 1200);
       } else {
         showToast(err.message || "Something went wrong. Please try again.");
       }
@@ -69,46 +70,47 @@ export default function AIPage() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto mt-10 p-6">
-      <h1 className="text-3xl font-bold mb-8">🤖 AI Product Description Generator</h1>
+    <div className="max-w-3xl mx-auto mt-6 sm:mt-10 p-4 sm:p-6">
+      <h1 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8">🤖 AI Product Description Generator</h1>
 
-      <input
-        className="border p-3 w-full mb-4 rounded"
-        placeholder="Product Name"
-        name="name"
-        value={form.name}
-        onChange={handleChange}
-      />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+        <input
+          className="border p-3 w-full rounded"
+          placeholder="Product Name"
+          name="name"
+          value={form.name}
+          onChange={handleChange}
+        />
 
-      <input
-        className="border p-3 w-full mb-4 rounded"
-        placeholder="Category"
-        name="category"
-        value={form.category}
-        onChange={handleChange}
-      />
+        <input
+          className="border p-3 w-full rounded"
+          placeholder="Category"
+          name="category"
+          value={form.category}
+          onChange={handleChange}
+        />
 
-      <input
-        className="border p-3 w-full mb-4 rounded"
-        placeholder="Material"
-        name="material"
-        value={form.material}
-        onChange={handleChange}
-      />
+        <input
+          className="border p-3 w-full rounded"
+          placeholder="Material"
+          name="material"
+          value={form.material}
+          onChange={handleChange}
+        />
 
-      <textarea
-        className="border p-3 w-full mb-4 rounded"
-        rows="4"
-        placeholder="Features"
-        name="features"
-        value={form.features}
-        onChange={handleChange}
-      />
+        <input
+          className="border p-3 w-full rounded"
+          placeholder="Features (comma separated)"
+          name="features"
+          value={form.features}
+          onChange={handleChange}
+        />
+      </div>
 
       <button
         onClick={generateDescription}
         disabled={loading}
-        className="bg-blue-600 text-white px-6 py-3 rounded disabled:opacity-50"
+        className="bg-blue-600 text-white px-6 py-3 rounded disabled:opacity-50 w-full sm:w-auto"
       >
         {loading ? "Generating..." : "Generate Description"}
       </button>
@@ -122,7 +124,7 @@ export default function AIPage() {
       {description && !loading && (
         <div className="mt-8 border rounded p-4 bg-gray-100">
           <h2 className="font-bold mb-2">Generated Description</h2>
-          <p>{description}</p>
+          <p className="whitespace-pre-line leading-relaxed">{description}</p>
         </div>
       )}
 
